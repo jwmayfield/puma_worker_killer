@@ -17,11 +17,12 @@ module PumaWorkerKiller
       req['Authorization'] = authorization
       req['Content-type'] = content_type
       req['Accept'] = accept
-      req.set_form_data(
+      req.set_form_data( # see https://devcenter.heroku.com/articles/platform-api-reference#log-session-create
         {
           tail: true,
           source: 'heroku',
-          dyno: ENV['DYNO'] || 'web.1'
+          dyno: ENV['DYNO'] || 'web.1',
+          lines: 1500
         }
       )
       res = Net::HTTP.start(uri.host, uri.port, use_ssl: (uri.scheme == "https")) {|http| http.request(req)}
