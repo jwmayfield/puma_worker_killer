@@ -23,7 +23,7 @@ module PumaWorkerKiller
     private
 
     def memory_size_from_chunk(chunk)
-      line = chunk.split("\n").select{|line| line.include? 'sample#memory_total'}.last || 'no line'
+      line = chunk.split("\n").select{|line| line.include? 'sample#memory_total'}.first || 'no line'
       size = line.match(/sample#memory_total=([\d\.]+)/) || [nil, 0.0]
       return size[1].to_f
     end
