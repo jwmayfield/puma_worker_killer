@@ -1,14 +1,15 @@
 module PumaWorkerKiller
   class Reaper
-    def initialize(max_ram, master = nil, reaper_status_logs = true, pre_term)
+    def initialize(max_ram, percent_usage, master = nil, reaper_status_logs = true, pre_term)
       @cluster = PumaWorkerKiller::PumaMemory.new(master)
-      @max_ram = max_ram
+      @max_ram = max_ram * percent_usage
+      @percent_usage = percent_usage
       @reaper_status_logs = reaper_status_logs
       @pre_term = pre_term
     end
 
     def get_max_memory(default)
-      @cluster.get_max_memory(default)
+      @cluster.get_max_memory(default) * @percent_usage
     end
 
     # used for tes
