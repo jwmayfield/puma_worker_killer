@@ -7,6 +7,10 @@ module PumaWorkerKiller
       @pre_term = pre_term
     end
 
+    def get_max_memory
+      @cluster.get_max_memory
+    end
+
     # used for tes
     def get_total_memory
       @cluster.get_total_memory
