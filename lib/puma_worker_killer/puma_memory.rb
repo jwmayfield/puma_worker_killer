@@ -1,12 +1,10 @@
 module PumaWorkerKiller
   class PumaMemory
     def initialize(master = nil)
-      @master  = master || get_master
+      @master = master || get_master
     end
 
-    def master
-      @master
-    end
+    attr_reader :master
 
     def size
       workers.size
@@ -18,8 +16,8 @@ module PumaWorkerKiller
 
     def term_largest_worker
       largest_worker.term
-    #   Process.wait(largest_worker.pid)
-    # rescue Errno::ECHILD
+      #   Process.wait(largest_worker.pid)
+      # rescue Errno::ECHILD
     end
 
     def workers_stopped?
@@ -31,7 +29,7 @@ module PumaWorkerKiller
     end
 
     def smallest_worker
-      smallest, _ = workers.to_a.first
+      smallest, = workers.to_a.first
       smallest
     end
 
@@ -41,7 +39,7 @@ module PumaWorkerKiller
     end
 
     def largest_worker
-      largest_worker, _ = workers.to_a.last
+      largest_worker, = workers.to_a.last
       largest_worker
     end
 
@@ -55,14 +53,32 @@ module PumaWorkerKiller
       if PumaWorkerKiller.heroku_api_token
         heroku = HerokuWrapper.new(PumaWorkerKiller.heroku_app_name, PumaWorkerKiller.heroku_api_token)
         stream_url = heroku.create_log_session
-        Stream.new(stream_url).watch rescue 0.0
+        begin
+          Stream.new(stream_url).watch
+        rescue StandardError
+          0.0
+        end
       else
         master_memory = GetProcessMem.new(Process.pid).mb
-        worker_memory = workers.map {|_, mem| mem }.inject(&:+) || 0
+        worker_memory = workers.map { |_, mem| mem }.inject(&:+) || 0
         worker_memory + master_memory
       end
     end
-    alias :get_total_memory :get_total
+    alias get_total_memory get_total
+
+    def get_max_memory(default)
+      if PumaWorkerKiller.heroku_api_token
+        heroku = HerokuWrapper.new(PumaWorkerKiller.heroku_app_name, PumaWorkerKiller.heroku_api_token)
+        stream_url = heroku.create_log_session
+        begin
+          Stream.new(stream_url).quota(default)
+        rescue StandardError
+          default
+        end
+      else
+        default
+      end
+    end
 
     def workers
       @workers || set_workers
@@ -78,11 +94,11 @@ module PumaWorkerKiller
     # sorted by memory ascending (smallest first, largest last)
     def set_workers
       workers = {}
-      @master.instance_variable_get("@workers").each do |worker|
+      @master.instance_variable_get('@workers').each do |worker|
         workers[worker] = GetProcessMem.new(worker.pid).mb
       end
       if workers.any?
-        @workers = Hash[ workers.sort_by {|_, mem| mem } ]
+        @workers = Hash[workers.sort_by { |_, mem| mem }]
       else
         {}
       end
