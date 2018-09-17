@@ -67,7 +67,8 @@ module PumaWorkerKiller
     alias get_total_memory get_total
 
     def get_max_memory(default)
-      ENV['HEROKU_RAM_LIMIT_MB'] || default
+      limit = ENV['HEROKU_RAM_LIMIT_MB'].to_f
+      limit > 0 ? limit : default
     rescue StandardError
       default
     end
