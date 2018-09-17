@@ -67,17 +67,9 @@ module PumaWorkerKiller
     alias get_total_memory get_total
 
     def get_max_memory(default)
-      if PumaWorkerKiller.heroku_api_token
-        heroku = HerokuWrapper.new(PumaWorkerKiller.heroku_app_name, PumaWorkerKiller.heroku_api_token)
-        stream_url = heroku.create_log_session
-        begin
-          Stream.new(stream_url).quota(default)
-        rescue StandardError
-          default
-        end
-      else
-        default
-      end
+      ENV['HEROKU_RAM_LIMIT_MB'] || default
+    rescue StandardError
+      default
     end
 
     def workers
